@@ -65,6 +65,9 @@ namespace :sneakers do
   def stop_sneakers(pid_file)
     if fetch(:sneakers_run_config) == true
       execute :kill, "-SIGTERM `cat #{pid_file}`"
+      while sneakers_pid_process_exists?(pid_file) do
+        sleep(0.5)
+      end
     else
       if fetch(:stop_sneakers_in_background, fetch(:sneakers_run_in_background))
         if fetch(:sneakers_use_signals)
@@ -189,6 +192,7 @@ namespace :sneakers do
         end
       end
     end
+    Rake::Task['sneakers:stop'].reenable
   end
 
   desc 'Start sneakers'
@@ -205,6 +209,7 @@ namespace :sneakers do
   desc 'Restart sneakers'
   task :restart do
     invoke 'sneakers:stop'
+    Rake::Task['sneakers:stop'].reenable
     invoke 'sneakers:start'
   end
 
